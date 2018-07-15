@@ -15,6 +15,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var paddle = SKSpriteNode()
     var brick = SKSpriteNode()
     var loseZone = SKSpriteNode()
+    var bricks = [SKSpriteNode]()
+    
     
     override func didMove(to view: SKView)
     {
@@ -23,7 +25,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createBackground()
         makeBall()
         makePaddle()
-        makeBrick()
+        bricks = [SKSpriteNode]()
+        
+        var index = frame.minX + 30
+        
+        for x in 1...3
+        {
+            while index < frame.maxX - 30
+            {
+                if x > 1
+                {
+                    makeBrick(positionX: index, positionY: 30*CGFloat(x), color: UIColor.green)//blue
+                   
+                }
+                else
+                {
+                    makeBrick(positionX: index, positionY: 30*CGFloat(x), color: UIColor.green)
+                }
+                index += 55
+            }
+            
+            index = frame.minX + 30
+        }
         makeLoseZone()
         ball.physicsBody?.isDynamic = true
         ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
@@ -79,13 +102,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(paddle)
     }
     
-    func makeBrick() {
-        brick = SKSpriteNode(color: UIColor.blue, size: CGSize(width: 50, height: 20))
-        brick.position = CGPoint(x: frame.midX, y: frame.maxY - 30)
+    func makeBrick(positionX: CGFloat, positionY: CGFloat, color: UIColor) {
+        brick = SKSpriteNode(color: color, size: CGSize(width: 50, height: 20))
+        brick.position = CGPoint(x: frame.midX - positionX, y: frame.maxY - positionY)
         brick.name = "brick"
         brick.physicsBody = SKPhysicsBody(rectangleOf: brick.size)
         brick.physicsBody?.isDynamic = false
         addChild(brick)
+        bricks.append(brick)
     }
     
     func makeLoseZone() {
@@ -95,6 +119,72 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         loseZone.physicsBody = SKPhysicsBody(rectangleOf: loseZone.size)
         loseZone.physicsBody?.isDynamic = false
         addChild(loseZone)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let location = touch.location(in: self)
+            paddle.position.x = location.x
+        }
+
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let location = touch.location(in: self)
+            paddle.position.x = location.x
+        }
+
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        if(ball.physicsBody?.velocity.dx == 0 || ball.physicsBody?.velocity.dy == 0)
+        {
+            ball.removeFromParent()
+            makeBall()
+        }
+        
+        for brick in bricks
+        {
+            if contact.bodyA.node == brick && brick.color == UIColor.blue || contact.bodyB.node == brick && brick.color == UIColor.blue
+            {
+                brick.removeFromParent()
+                bricks.remove(at: bricks.index(of: brick)!)
+            }
+            else if contact.bodyA.node == brick || contact.bodyB.node == brick && brick.color == UIColor.green
+            {
+                brick.color = UIColor.blue
+                break
+            }
+        }
+        
+        if bricks.count == 0
+        {
+            win()
+        }
+       /* if contact.bodyA.node?.name == "brick" ||
+            contact.bodyB.node?.name == "brick" {
+            print("You win!")
+            brick.removeFromParent()
+            ball.removeFromParent()
+        }*/
+        if contact.bodyA.node?.name == "loseZone" ||
+            contact.bodyB.node?.name == "loseZone" {
+            print("You lose!")
+            ball.removeFromParent()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.makeBall()
+                self.ball.physicsBody?.isDynamic = true
+                self.ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+            }
+            
+        }
+    }
+    
+    func win()
+    {
+    
     }
         
 }
