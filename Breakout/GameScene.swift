@@ -170,9 +170,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }*/
         if contact.bodyA.node?.name == "loseZone" ||
             contact.bodyB.node?.name == "loseZone" {
-            print("You lose!")
             ball.removeFromParent()
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                for brick in self.bricks
+                {
+                    brick.removeFromParent()
+                }
+                self.paddle.removeFromParent()
+                self.loseZone.removeFromParent()
                 self.start()
             }
             
