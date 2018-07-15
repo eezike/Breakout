@@ -8,6 +8,7 @@
 
 import SpriteKit
 import GameplayKit
+import UIKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -17,8 +18,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var loseZone = SKSpriteNode()
     var bricks = [SKSpriteNode]()
     
-    
-    override func didMove(to view: SKView)
+    func start ()
     {
         physicsWorld.contactDelegate = self
         self.physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
@@ -35,8 +35,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             {
                 if x > 1
                 {
-                    makeBrick(positionX: index, positionY: 30*CGFloat(x), color: UIColor.green)//blue
-                   
+                    makeBrick(positionX: index, positionY: 30*CGFloat(x), color: UIColor.blue)//blue
+                    
                 }
                 else
                 {
@@ -50,6 +50,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         makeLoseZone()
         ball.physicsBody?.isDynamic = true
         ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+    }
+    
+    override func didMove(to view: SKView)
+    {
+        start()
     }
     
     func createBackground() {
@@ -139,12 +144,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func didBegin(_ contact: SKPhysicsContact) {
         
-        if(ball.physicsBody?.velocity.dx == 0 || ball.physicsBody?.velocity.dy == 0)
-        {
-            ball.removeFromParent()
-            makeBall()
-        }
-        
         for brick in bricks
         {
             if contact.bodyA.node == brick && brick.color == UIColor.blue || contact.bodyB.node == brick && brick.color == UIColor.blue
@@ -174,9 +173,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             print("You lose!")
             ball.removeFromParent()
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self.makeBall()
-                self.ball.physicsBody?.isDynamic = true
-                self.ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+                self.start()
             }
             
         }
@@ -184,7 +181,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func win()
     {
-    
+        ball.removeFromParent()
+        paddle.removeFromParent()
+        loseZone.removeFromParent()
+        let alert = UIAlertController(title: "You Won!", message: "Do you want to play again?", preferredStyle: .alert)
+        
+        let cancelAction = UIAlertAction(title: "No", style: .cancel, handler: nil)
+        
+        alert.addAction(cancelAction)
+        
+        let okAction = UIAlertAction(title: "Yes", style: .default) { (action) in
+            self.start()
+        }
+        
+        alert.addAction(okAction)
+        self.view?.window?.rootViewController?.present (alert, animated: true, completion: nil)
     }
         
 }
